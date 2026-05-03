@@ -15,13 +15,35 @@ app.use(cors());
 app.use(express.json());
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'zrokui backend is running', 
-    port: PORT,
-    redis: redis.isUsingInMemory() ? 'in-memory' : 'connected',
-  });
+app.get('/health', async (req, res) => {
+  const health = {
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    environment: env.NODE_ENV,
+    services: {
+      redis: redis.isUsingInMemory() ? 'in-memory' : 'connected',
+      zrok: 'unknown',
+    },
+    version: '1.0.0',
+  };
+
+  // Test zrok controller (if configured)
+  if (env.ZROK_API_URL) {
+    try {
+      const axios = require('axios');
+      await axios.get(`${env.ZROK_API_URL}/api/v1/version`, {
+        timeout: 2000,
+      });
+      health.services.zrok = 'connected';
+    } catch (error) {
+      health.services.zrok = 'disconnected';
+      health.status = 'degraded';
+    }
+  }
+
+  const statusCode = health.status === 'ok' ? 200 : 503;
+  res.status(statusCode).json(health);
 });
 
 // API routes
