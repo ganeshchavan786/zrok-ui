@@ -1,16 +1,14 @@
 // backend/src/index.ts
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import tokenRoutes from './routes/tokens';
 import tunnelRoutes from './routes/tunnels';
 import { redis } from './services/redisService';
-
-dotenv.config();
+import { env, isProduction } from './config/env';
 
 const app = express();
-const PORT = process.env.PORT || 3666;
+const PORT = env.PORT;
 
 // Middleware
 app.use(cors());
@@ -60,6 +58,10 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 app.listen(PORT, () => {
   console.log(`✓ Backend running on http://localhost:${PORT}`);
+  console.log(`✓ Environment: ${env.NODE_ENV}`);
   console.log(`✓ Health check: http://localhost:${PORT}/health`);
   console.log(`✓ Redis: ${redis.isUsingInMemory() ? '⚠️  In-memory mode (Redis not available)' : '✓ Connected'}`);
+  if (env.ZROK_API_URL) {
+    console.log(`✓ zrok Controller: ${env.ZROK_API_URL}`);
+  }
 });
