@@ -1,15 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import Redis from 'ioredis';
 import crypto from 'crypto';
 import { authMiddleware } from '../middleware/auth';
+import { redis } from '../services/redisService';
 
 const router = Router();
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-});
 
 const createTokenSchema = z.object({
   name: z.string().min(1).max(100),
@@ -20,15 +15,17 @@ router.get('/', authMiddleware, async (req: Request, res: Response, next: NextFu
   try {
     const email = (req as any).user.email;
     
-    // Get token IDs for user
-    const tokenIds = await redis.smembers(`user:${email}:tokens`);
+    // Get all token keys for user
+    const tokenKeys = await redis.keys(`token:*`);
     
     // Get token details
     const tokens = await Promise.all(
-      tokenIds.map(async (id) => {
-        const data = await redis.get(`token:${id}`);
+      tokenKeys.map(async (key) => {
+        const data = await redis.get(key);
         if (!data) return null;
         const token = JSON.parse(data);
+        // Only return tokens for this user
+        if (token.email !== email) return null;
         // Don't return the actual token value
         return {
           id: token.id,
@@ -68,7 +65,6 @@ router.post('/', authMiddleware, async (req: Request, res: Response, next: NextF
     // Store token
     await redis.set(`token:${tokenId}`, JSON.stringify(token));
     await redis.set(`tokenvalue:${tokenValue}`, email);
-    await redis.sadd(`user:${email}:tokens`, tokenId);
 
     res.json({
       success: true,
@@ -109,7 +105,6 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response, next: 
     // Delete token
     await redis.del(`token:${id}`);
     await redis.del(`tokenvalue:${token.token}`);
-    await redis.srem(`user:${email}:tokens`, id);
 
     res.json({ success: true, data: { message: 'Token deleted' } });
   } catch (err) {

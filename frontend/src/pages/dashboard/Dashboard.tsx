@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Copy, Plus, Trash2, LogOut } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Copy, Plus, Trash2, LogOut, BarChart2 } from 'lucide-react';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3666';
@@ -111,9 +111,26 @@ export default function Dashboard() {
       {/* Header */}
       <header className="border-b border-zinc-800 bg-zinc-900">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="bg-violet-600 text-white px-2 py-1 rounded text-xl font-bold">⚡</span>
-            <h1 className="text-xl font-bold">zrokui</h1>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <span className="bg-violet-600 text-white px-2 py-1 rounded text-xl font-bold">⚡</span>
+              <h1 className="text-xl font-bold">zrokui</h1>
+            </div>
+            <nav className="flex items-center gap-4">
+              <Link
+                to="/dashboard"
+                className="text-violet-400 hover:text-violet-300 transition-colors font-medium"
+              >
+                Tokens
+              </Link>
+              <Link
+                to="/metrics"
+                className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+              >
+                <BarChart2 size={18} />
+                Metrics
+              </Link>
+            </nav>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-zinc-400">{user.email}</span>

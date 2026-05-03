@@ -4,6 +4,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth';
 import tokenRoutes from './routes/tokens';
+import tunnelRoutes from './routes/tunnels';
+import { redis } from './services/redisService';
 
 dotenv.config();
 
@@ -16,7 +18,12 @@ app.use(express.json());
 
 // Health check
 app.get('/health', (req, res) => {
-  res.json({ success: true, message: 'zrokui backend is running', port: PORT });
+  res.json({ 
+    success: true, 
+    message: 'zrokui backend is running', 
+    port: PORT,
+    redis: redis.isUsingInMemory() ? 'in-memory' : 'connected',
+  });
 });
 
 // API routes
@@ -37,6 +44,9 @@ app.use('/api/auth', authRoutes);
 // Token routes
 app.use('/api/tokens', tokenRoutes);
 
+// Tunnel routes
+app.use('/api/tunnels', tunnelRoutes);
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Route not found' });
@@ -51,4 +61,5 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 app.listen(PORT, () => {
   console.log(`✓ Backend running on http://localhost:${PORT}`);
   console.log(`✓ Health check: http://localhost:${PORT}/health`);
+  console.log(`✓ Redis: ${redis.isUsingInMemory() ? '⚠️  In-memory mode (Redis not available)' : '✓ Connected'}`);
 });

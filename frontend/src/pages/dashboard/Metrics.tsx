@@ -1,7 +1,8 @@
 // frontend/src/pages/dashboard/Metrics.tsx
 import { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { BarChart2, ArrowUp, ArrowDown } from 'lucide-react';
+import { BarChart2, ArrowUp, ArrowDown, LogOut, Key } from 'lucide-react';
 import { tunnelApi } from '../../services/api';
 
 interface Period { rx: { bytes: number; opCnt: number }; tx: { bytes: number; opCnt: number }; timestamp: string }
@@ -15,12 +16,31 @@ function fmt(bytes: number): string {
 }
 
 export default function Metrics() {
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<{ email: string } | null>(null);
 
   useEffect(() => {
-    tunnelApi.metrics().then(r => setMetrics(r.data.data as Metrics)).catch(console.error).finally(() => setLoading(false));
-  }, []);
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+
+    if (!token || !userData) {
+      navigate('/login');
+      return;
+    }
+
+    setUser(JSON.parse(userData));
+    tunnelApi.metrics().then((r: any) => setMetrics(r.data.data as Metrics)).catch(console.error).finally(() => setLoading(false));
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
+  if (!user) return null;
 
   const periods = metrics?.periods ?? [];
   const chartData = periods.map(p => ({
@@ -35,11 +55,53 @@ export default function Metrics() {
   const totalReq = periods.reduce((a, p) => a + p.rx.opCnt, 0);
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">Metrics</h1>
-        <p className="text-zinc-400 text-sm mt-0.5">Bandwidth and request activity for your account</p>
-      </div>
+    <div className="min-h-screen bg-zinc-950 text-white">
+      {/* Header */}
+      <header className="border-b border-zinc-800 bg-zinc-900">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <span className="bg-violet-600 text-white px-2 py-1 rounded text-xl font-bold">⚡</span>
+              <h1 className="text-xl font-bold">zrokui</h1>
+            </div>
+            <nav className="flex items-center gap-4">
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+              >
+                <Key size={18} />
+                Tokens
+              </Link>
+              <Link
+                to="/metrics"
+                className="text-violet-400 hover:text-violet-300 transition-colors font-medium"
+              >
+                <BarChart2 size={18} className="inline mr-2" />
+                Metrics
+              </Link>
+            </nav>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-zinc-400">{user.email}</span>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold mb-2">Metrics</h2>
+          <p className="text-zinc-400">
+            Bandwidth and request activity for your account
+          </p>
+        </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-3 mb-6">
@@ -113,6 +175,7 @@ export default function Metrics() {
           </div>
         </>
       )}
+      </main>
     </div>
   );
 }
