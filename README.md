@@ -32,7 +32,7 @@ A modern, self-hosted web interface for managing zrok shares with user authentic
 
 ```bash
 # 1. Start Redis (Docker)
-docker compose -f docker-compose.redis-only.yml up -d
+docker compose -f docker/docker-compose.redis-only.yml up -d
 
 # 2. Start Backend (Terminal 1)
 cd backend
@@ -45,13 +45,19 @@ npm install
 npm run dev
 ```
 
+**Or use the bootstrap script:**
+```bash
+./scripts/bootstrap.sh      # First time setup
+./scripts/start-local.sh    # Start development
+```
+
 Open http://localhost:3555 in your browser.
 
 ### Full Docker Stack
 
 ```bash
 # Start all services
-docker compose up -d
+docker compose -f docker/docker-compose.yml up -d
 
 # View logs
 docker logs -f zrokui-backend
@@ -80,14 +86,14 @@ docker logs -f zrokui-frontend
 
 4. **Deploy on VPS**:
    ```bash
-   # Update docker-compose.prod.yml with your GitHub username
+   # Update docker/docker-compose.prod.yml with your GitHub username
    # Then on your VPS:
    
    docker login ghcr.io -u YOUR_GITHUB_USERNAME
-   docker compose -f docker-compose.prod.yml up -d
+   docker compose -f docker/docker-compose.prod.yml up -d
    ```
 
-See [DEPLOY-GHCR.md](DEPLOY-GHCR.md) for detailed deployment instructions.
+See [docs/DEPLOY-GHCR.md](docs/DEPLOY-GHCR.md) for detailed deployment instructions.
 
 ## 📁 Project Structure
 
@@ -96,7 +102,9 @@ zrokui/
 ├── backend/              # Express API server
 │   ├── src/
 │   │   ├── index.ts     # Main server
+│   │   ├── routes/      # API routes
 │   │   ├── services/    # Business logic
+│   │   ├── middleware/  # Auth, error handling
 │   │   └── utils/       # Helper functions
 │   └── package.json
 │
@@ -104,6 +112,7 @@ zrokui/
 │   ├── src/
 │   │   ├── App.tsx      # Main component
 │   │   ├── pages/       # Page components
+│   │   ├── services/    # API client
 │   │   └── main.tsx     # Entry point
 │   └── package.json
 │
@@ -112,7 +121,26 @@ zrokui/
 │       ├── commands/    # CLI commands
 │       └── services/    # CLI services
 │
-└── docker-compose.yml   # Docker configuration
+├── docs/                # 📚 Documentation
+│   ├── README.md        # Documentation index
+│   ├── Getting Started/ # Setup guides
+│   ├── Features/        # Feature documentation
+│   ├── Deployment/      # Deployment guides
+│   └── Configuration/   # Config documentation
+│
+├── docker/              # 🐳 Docker configurations
+│   ├── docker-compose.yml           # Default dev
+│   ├── docker-compose.prod.yml      # Production
+│   ├── docker-compose.redis-only.yml # Redis only
+│   └── nginx-vps.conf               # Nginx config
+│
+├── scripts/             # 🔧 Utility scripts
+│   ├── bootstrap.sh     # Initial setup
+│   ├── start-local.sh   # Start development
+│   └── fix-docker-dns.sh # Fix Docker DNS
+│
+└── nginx/               # Nginx configurations
+    └── zrokui.conf      # Default nginx config
 ```
 
 ## 🔧 Configuration
@@ -154,9 +182,25 @@ server: {
 
 ## 📚 Documentation
 
-- [START-LOCAL.md](START-LOCAL.md) - Local development setup
-- [DEPLOY-GHCR.md](DEPLOY-GHCR.md) - Production deployment guide
-- [PROJECT-PORTS.md](PROJECT-PORTS.md) - Architecture overview
+### 📖 Complete Documentation
+See [docs/](docs/) folder for complete documentation:
+- **Getting Started:** Quick reference, local setup guides
+- **Features:** Complete feature list, user flow, implementation details
+- **Deployment:** VPS deployment, GHCR setup, CI/CD guides
+- **Configuration:** Port mapping, environment variables
+
+### 🔧 Scripts
+See [scripts/](scripts/) folder for utility scripts:
+- `bootstrap.sh` - Initial project setup
+- `start-local.sh` - Start local development
+- `fix-docker-dns.sh` - Fix Docker DNS issues
+
+### 🐳 Docker
+See [docker/](docker/) folder for Docker configurations:
+- `docker-compose.yml` - Default development
+- `docker-compose.prod.yml` - Production deployment
+- `docker-compose.redis-only.yml` - Redis only
+- `nginx-vps.conf` - Nginx reverse proxy config
 
 ## 🛠️ Tech Stack
 
