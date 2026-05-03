@@ -2,6 +2,8 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import authRoutes from './routes/auth';
+import tokenRoutes from './routes/tokens';
 
 dotenv.config();
 
@@ -28,6 +30,12 @@ app.get('/api/status', (req, res) => {
     },
   });
 });
+
+// Auth routes
+app.use('/api/auth', authRoutes);
+
+// Token routes
+app.use('/api/tokens', tokenRoutes);
 
 // 404 handler
 app.use((req, res) => {
