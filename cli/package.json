@@ -1,0 +1,24 @@
+{
+  "name": "zrokui-cli",
+  "version": "1.0.0",
+  "description": "zrokui CLI — expose localhost like ngrok",
+  "type": "commonjs",
+  "bin": { "zrokui": "./dist/index.js" },
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc && chmod +x dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "conf": "^10.2.0",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}
