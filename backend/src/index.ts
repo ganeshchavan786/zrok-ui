@@ -1,4 +1,3 @@
-// backend/src/index.ts
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth';
@@ -6,6 +5,7 @@ import tokenRoutes from './routes/tokens';
 import tunnelRoutes from './routes/tunnels';
 import { redis } from './services/redisService';
 import { env, isProduction } from './config/env';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
 const PORT = env.PORT;
@@ -45,16 +45,11 @@ app.use('/api/tokens', tokenRoutes);
 // Tunnel routes
 app.use('/api/tunnels', tunnelRoutes);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({ success: false, error: 'Route not found' });
-});
+// 404 handler - must be after all routes
+app.use(notFoundHandler);
 
-// Error handler
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, error: 'Internal server error' });
-});
+// Global error handler - must be last
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`✓ Backend running on http://localhost:${PORT}`);
